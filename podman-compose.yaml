@@ -1,18 +1,18 @@
 version: '3.8'
 
 services:
-  shard-calculator:
+  shardmanager:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: shard-calculator
+    container_name: shardmanager
     ports:
       - "8080:5000"
     volumes:
       # 持久化数据库
-      - shard-data:/data
+      - shardmanager-data:/data
     environment:
-      - DB_PATH=/data/shard_calculator.db
+      - DB_PATH=/data/shardmanager.db
       - PORT=5000
     restart: unless-stopped
     healthcheck:
@@ -23,6 +23,6 @@ services:
       start_period: 10s
 
 volumes:
-  shard-data:
+  shardmanager-data:
     driver: local
 

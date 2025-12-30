@@ -12,7 +12,7 @@ app = Flask(__name__, static_folder='.')
 CORS(app)
 
 # 数据库文件路径
-DB_PATH = os.environ.get('DB_PATH', '/data/shard_calculator.db')
+DB_PATH = os.environ.get('DB_PATH', '/data/shardmanager.db')
 
 # 确保数据目录存在
 os.makedirs(os.path.dirname(DB_PATH) if os.path.dirname(DB_PATH) else '.', exist_ok=True)

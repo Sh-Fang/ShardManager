@@ -1,4 +1,4 @@
-# 分片表计算器
+# ShardManager
 
 一个用于计算数据库分片表名的Web应用，支持MySQL和MongoDB分片计算，并提供历史记录存储功能。
 
@@ -54,22 +54,22 @@ podman-compose down
 
 ```bash
 # 构建镜像
-podman build -t shard-calculator:latest .
+podman build -t shardmanager:latest .
 
 # 创建数据卷
-podman volume create shard-data
+podman volume create shardmanager-data
 
 # 运行容器
 podman run -d \
-  --name shard-calculator \
+  --name shardmanager \
   -p 8080:5000 \
-  -v shard-data:/data \
-  -e DB_PATH=/data/shard_calculator.db \
+  -v shardmanager-data:/data \
+  -e DB_PATH=/data/shardmanager.db \
   --restart unless-stopped \
-  shard-calculator:latest
+  shardmanager:latest
 
 # 查看日志
-podman logs -f shard-calculator
+podman logs -f shardmanager
 ```
 
 ## 配置说明
@@ -85,16 +85,16 @@ ports:
 
 ### 数据持久化
 
-历史记录数据保存在命名卷 `shard-data` 中，即使容器删除，数据也不会丢失。
+历史记录数据保存在命名卷 `shardmanager-data` 中，即使容器删除，数据也不会丢失。
 
 如果需要备份数据：
 
 ```bash
 # 查找卷的实际位置
-podman volume inspect shard-data
+podman volume inspect shardmanager-data
 
 # 或直接复制数据库文件
-podman cp shard-calculator:/data/shard_calculator.db ./backup.db
+podman cp shardmanager:/data/shardmanager.db ./backup.db
 ```
 
 ## API 接口

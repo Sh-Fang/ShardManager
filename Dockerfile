@@ -17,7 +17,7 @@ RUN mkdir -p /data
 EXPOSE 5000
 
 # 设置环境变量
-ENV DB_PATH=/data/shard_calculator.db
+ENV DB_PATH=/data/shardmanager.db
 ENV PORT=5000
 ENV PYTHONUNBUFFERED=1
 
