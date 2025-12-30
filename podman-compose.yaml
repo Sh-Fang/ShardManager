@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  shard-calculator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shard-calculator
+    ports:
+      - "8080:5000"
+    volumes:
+      # 持久化数据库
+      - shard-data:/data
+    environment:
+      - DB_PATH=/data/shard_calculator.db
+      - PORT=5000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  shard-data:
+    driver: local
+
