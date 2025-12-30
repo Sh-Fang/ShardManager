@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from contextlib import contextmanager
 
-app = Flask(__name__, static_folder='.')
+app = Flask(__name__, static_folder='static')
 CORS(app)
 
 # 数据库文件路径
@@ -64,7 +64,7 @@ def init_db():
 @app.route('/')
 def index():
     """返回主页"""
-    return send_from_directory('.', 'index.html')
+    return send_from_directory('static', 'index.html')
 
 
 @app.route('/api/history', methods=['GET'])

@@ -40,14 +40,12 @@ show_menu() {
     echo -e "  ${GREEN}4)${NC} 重启服务"
     echo -e "  ${GREEN}5)${NC} 查看日志"
     echo -e "  ${GREEN}6)${NC} 查看状态"
-    echo -e "  ${GREEN}7)${NC} 备份数据库"
-    echo -e "  ${GREEN}8)${NC} 恢复数据库"
-    echo -e "  ${GREEN}9)${NC} 清理悬空镜像"
-    echo -e "  ${RED}10)${NC} 完全清理 (删除容器、镜像、数据)"
-    echo -e "  ${BLUE}11)${NC} 打开浏览器"
+    echo -e "  ${GREEN}7)${NC} 清理悬空镜像"
+    echo -e "  ${RED}8)${NC} 完全清理 (删除容器、镜像、数据)"
+    echo -e "  ${BLUE}9)${NC} 打开浏览器"
     echo -e "  ${YELLOW}0)${NC} 退出"
     echo ""
-    echo -ne "${BOLD}请输入选项 [0-11]: ${NC}"
+    echo -ne "${BOLD}请输入选项 [0-9]: ${NC}"
 }
 
 # 暂停函数
@@ -59,8 +57,8 @@ pause() {
 
 # 检查项目目录
 check_project_dir() {
-    if [ ! -f "podman-compose.yaml" ]; then
-        echo -e "${RED}错误: 未找到 podman-compose.yaml 文件${NC}"
+    if [ ! -f "docker/podman-compose.yaml" ]; then
+        echo -e "${RED}错误: 未找到 docker/podman-compose.yaml 文件${NC}"
         echo "请在项目根目录下运行此脚本"
         exit 1
     fi
@@ -74,7 +72,7 @@ start_service() {
     echo ""
     
     echo -e "${YELLOW}[1/5] 停止旧容器...${NC}"
-    podman-compose down
+    podman-compose -f docker/podman-compose.yaml down
     
     echo ""
     echo -e "${YELLOW}[2/5] 清理悬空镜像...${NC}"
@@ -82,11 +80,11 @@ start_service() {
     
     echo ""
     echo -e "${YELLOW}[3/5] 重新构建镜像...${NC}"
-    podman-compose build
+    podman-compose -f docker/podman-compose.yaml build
     
     echo ""
     echo -e "${YELLOW}[4/5] 启动容器...${NC}"
-    podman-compose up -d
+    podman-compose -f docker/podman-compose.yaml up -d
     
     echo ""
     echo -e "${YELLOW}[5/5] 等待服务就绪...${NC}"
@@ -108,7 +106,7 @@ quick_start() {
     echo ""
     
     echo -e "${YELLOW}正在启动容器...${NC}"
-    podman-compose up -d
+    podman-compose -f docker/podman-compose.yaml up -d
     
     echo ""
     echo -e "${GREEN}${BOLD}✓ 启动完成！${NC}"
@@ -126,7 +124,7 @@ stop_service() {
     echo ""
     
     echo -e "${YELLOW}正在停止容器...${NC}"
-    podman-compose down
+    podman-compose -f docker/podman-compose.yaml down
     
     echo ""
     echo -e "${GREEN}${BOLD}✓ 已停止容器${NC}"
@@ -142,7 +140,7 @@ restart_service() {
     echo ""
     
     echo -e "${YELLOW}正在重启容器...${NC}"
-    podman-compose restart
+    podman-compose -f docker/podman-compose.yaml restart
     
     echo ""
     echo -e "${GREEN}${BOLD}✓ 重启完成！${NC}"
@@ -161,7 +159,7 @@ view_logs() {
     
     # 捕获 Ctrl+C 信号，防止退出整个脚本
     trap '' INT
-    podman-compose logs -f
+    podman-compose -f docker/podman-compose.yaml logs -f
     trap - INT
     
     # 日志查看结束后暂停
@@ -209,130 +207,7 @@ view_status() {
     pause
 }
 
-# 7. 备份数据库
-backup_database() {
-    clear_screen
-    show_banner
-    echo -e "${BOLD}${BLUE}=== 备份数据库 ===${NC}"
-    echo ""
-    
-    # 创建备份目录
-    BACKUP_DIR="./backups"
-    mkdir -p "$BACKUP_DIR"
-    
-    # 生成备份文件名
-    TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-    BACKUP_FILE="$BACKUP_DIR/shardmanager_${TIMESTAMP}.db"
-    
-    echo -e "${YELLOW}正在备份数据库...${NC}"
-    
-    # 检查容器是否运行
-    if podman ps | grep -q shardmanager; then
-        podman cp shardmanager:/data/shardmanager.db "$BACKUP_FILE"
-        if [ -f "$BACKUP_FILE" ]; then
-            echo ""
-            echo -e "${GREEN}${BOLD}✓ 备份成功！${NC}"
-            echo ""
-            echo -e "备份文件: ${CYAN}$BACKUP_FILE${NC}"
-            echo -e "文件大小: $(du -h "$BACKUP_FILE" | cut -f1)"
-        else
-            echo -e "${RED}✗ 备份失败${NC}"
-        fi
-    else
-        echo -e "${YELLOW}容器未运行，尝试从数据卷备份...${NC}"
-        podman run --rm -v shardmanager-data:/data -v $(pwd):/backup alpine \
-            cp /data/shardmanager.db /backup/$BACKUP_FILE 2>/dev/null
-        
-        if [ -f "$BACKUP_FILE" ]; then
-            echo ""
-            echo -e "${GREEN}${BOLD}✓ 备份成功！${NC}"
-            echo ""
-            echo -e "备份文件: ${CYAN}$BACKUP_FILE${NC}"
-            echo -e "文件大小: $(du -h "$BACKUP_FILE" | cut -f1)"
-        else
-            echo -e "${RED}✗ 备份失败，数据库文件不存在${NC}"
-        fi
-    fi
-    
-    pause
-}
-
-# 8. 恢复数据库
-restore_database() {
-    clear_screen
-    show_banner
-    echo -e "${BOLD}${BLUE}=== 恢复数据库 ===${NC}"
-    echo ""
-    
-    BACKUP_DIR="./backups"
-    
-    if [ ! -d "$BACKUP_DIR" ] || [ -z "$(ls -A $BACKUP_DIR 2>/dev/null)" ]; then
-        echo -e "${RED}错误: 未找到备份文件${NC}"
-        echo "请先执行备份操作"
-        pause
-        return
-    fi
-    
-    echo -e "${BOLD}可用的备份文件:${NC}"
-    echo ""
-    
-    # 列出备份文件
-    backups=($(ls -t $BACKUP_DIR/*.db 2>/dev/null))
-    if [ ${#backups[@]} -eq 0 ]; then
-        echo -e "${RED}未找到备份文件${NC}"
-        pause
-        return
-    fi
-    
-    for i in "${!backups[@]}"; do
-        filename=$(basename "${backups[$i]}")
-        filesize=$(du -h "${backups[$i]}" | cut -f1)
-        echo -e "  ${GREEN}$((i+1)))${NC} $filename (${filesize})"
-    done
-    
-    echo ""
-    echo -ne "${BOLD}请选择要恢复的备份 [1-${#backups[@]}] (0取消): ${NC}"
-    read choice
-    
-    if [ "$choice" == "0" ]; then
-        echo "已取消"
-        pause
-        return
-    fi
-    
-    if [ "$choice" -ge 1 ] && [ "$choice" -le "${#backups[@]}" ]; then
-        RESTORE_FILE="${backups[$((choice-1))]}"
-        
-        echo ""
-        echo -e "${RED}${BOLD}警告: 此操作将覆盖当前数据库！${NC}"
-        echo -ne "${YELLOW}确认恢复? (yes/no): ${NC}"
-        read confirm
-        
-        if [ "$confirm" != "yes" ]; then
-            echo "已取消"
-            pause
-            return
-        fi
-        
-        echo ""
-        echo -e "${YELLOW}正在恢复数据库...${NC}"
-        
-        if podman ps | grep -q shardmanager; then
-            podman cp "$RESTORE_FILE" shardmanager:/data/shardmanager.db
-            podman restart shardmanager
-            echo ""
-            echo -e "${GREEN}${BOLD}✓ 恢复成功！容器已重启${NC}"
-        else
-            echo -e "${RED}错误: 容器未运行，请先启动服务${NC}"
-        fi
-    else
-        echo -e "${RED}无效的选择${NC}"
-    fi
-    
-    pause
-}
-
-# 9. 清理悬空镜像
+# 7. 清理悬空镜像
 clean_dangling() {
     clear_screen
     show_banner
@@ -348,7 +223,7 @@ clean_dangling() {
     pause
 }
 
-# 10. 完全清理
+# 8. 完全清理
 full_cleanup() {
     clear_screen
     show_banner
@@ -373,7 +248,7 @@ full_cleanup() {
     
     echo ""
     echo -e "${YELLOW}[1/4] 停止并删除容器...${NC}"
-    podman-compose down
+    podman-compose -f docker/podman-compose.yaml down
     
     echo ""
     echo -e "${YELLOW}[2/4] 删除镜像...${NC}"
@@ -393,7 +268,7 @@ full_cleanup() {
     pause
 }
 
-# 11. 打开浏览器
+# 9. 打开浏览器
 open_browser() {
     clear_screen
     show_banner
@@ -450,11 +325,9 @@ main() {
             4) restart_service ;;
             5) view_logs ;;
             6) view_status ;;
-            7) backup_database ;;
-            8) restore_database ;;
-            9) clean_dangling ;;
-            10) full_cleanup ;;
-            11) open_browser ;;
+            7) clean_dangling ;;
+            8) full_cleanup ;;
+            9) open_browser ;;
             0)
                 clear_screen
                 echo ""

@@ -3,8 +3,8 @@ version: '3.8'
 services:
   shardmanager:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: shardmanager
     ports:
       - "8080:5000"

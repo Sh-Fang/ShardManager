@@ -23,10 +23,11 @@ wheels/
 .installed.cfg
 *.egg
 
-# SQLite数据库
+# 数据库
 *.db
 *.sqlite
 *.sqlite3
+data/
 
 # IDE
 .vscode/
@@ -35,14 +36,13 @@ wheels/
 *.swo
 *~
 
-# 环境变量
-.env
-.env.local
+# 系统文件
+.DS_Store
+Thumbs.db
 
 # 日志
 *.log
 
-# OS
-.DS_Store
-Thumbs.db
-
+# 环境变量
+.env
+.env.local
