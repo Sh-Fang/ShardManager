@@ -93,7 +93,7 @@ start_service() {
     echo ""
     echo -e "${GREEN}${BOLD}✓ 启动完成！${NC}"
     echo ""
-    echo -e "访问地址: ${CYAN}http://localhost:8080${NC}"
+    echo -e "访问地址: ${CYAN}http://localhost:8765${NC}"
     
     pause
 }
@@ -111,7 +111,7 @@ quick_start() {
     echo ""
     echo -e "${GREEN}${BOLD}✓ 启动完成！${NC}"
     echo ""
-    echo -e "访问地址: ${CYAN}http://localhost:8080${NC}"
+    echo -e "访问地址: ${CYAN}http://localhost:8765${NC}"
     
     pause
 }
@@ -184,9 +184,9 @@ view_status() {
         
         # 健康检查
         echo -e "${BOLD}健康检查:${NC}"
-        if curl -s http://localhost:8080/api/health >/dev/null 2>&1; then
+        if curl -s http://localhost:8765/api/health >/dev/null 2>&1; then
             echo -e "${GREEN}✓ API 响应正常${NC}"
-            curl -s http://localhost:8080/api/health | python3 -m json.tool 2>/dev/null
+            curl -s http://localhost:8765/api/health | python3 -m json.tool 2>/dev/null
         else
             echo -e "${RED}✗ API 未响应${NC}"
         fi
@@ -275,7 +275,7 @@ open_browser() {
     echo -e "${BOLD}${BLUE}=== 打开浏览器 ===${NC}"
     echo ""
     
-    URL="http://localhost:8080"
+    URL="http://localhost:8765"
     
     # 检查服务是否运行
     if ! podman ps | grep -q shardmanager; then

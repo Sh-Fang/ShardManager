@@ -18,7 +18,7 @@ EXPOSE 5000
 
 # 设置环境变量
 ENV DB_PATH=/data/shardmanager.db
-ENV PORT=5000
+ENV PORT=8765
 ENV PYTHONUNBUFFERED=1
 
 # 运行应用

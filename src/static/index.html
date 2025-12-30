@@ -242,11 +242,28 @@
         }
 
         .history-user-id {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             color: #333;
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-id-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #666;
+            background: #e8e8e8;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .user-id-value {
             font-family: 'Courier New', monospace;
+            color: #333;
         }
 
         .history-details {
@@ -277,38 +294,21 @@
             font-family: 'Courier New', monospace;
         }
 
-        .history-actions {
-            margin-top: 12px;
-            display: flex;
-            gap: 8px;
-        }
-
-        .action-btn {
-            flex: 1;
-            padding: 8px 16px;
+        .btn-delete-icon {
+            background: none;
             border: none;
-            border-radius: 4px;
             cursor: pointer;
-            font-size: 13px;
-            color: white;
+            font-size: 18px;
+            color: #f44336;
+            padding: 4px;
             transition: all 0.3s;
-            font-weight: 500;
+            margin-left: auto;
+            line-height: 1;
         }
 
-        .btn-use {
-            background: #4CAF50;
-        }
-
-        .btn-use:hover {
-            background: #45a049;
-        }
-
-        .btn-delete {
-            background: #f44336;
-        }
-
-        .btn-delete:hover {
-            background: #da190b;
+        .btn-delete-icon:hover {
+            color: #da190b;
+            transform: scale(1.15);
         }
 
         .empty-history {
@@ -318,11 +318,92 @@
             font-size: 15px;
         }
 
-        .timestamp {
-            font-size: 12px;
-            color: #999;
-            margin-top: 8px;
-            text-align: right;
+
+        /* 自定义确认弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .modal-message {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .modal-btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #d0d0d0;
+        }
+
+        .modal-btn-confirm {
+            background: #f44336;
+            color: white;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #da190b;
         }
 
         /* 滚动条样式 */
@@ -407,18 +488,6 @@
             <button class="btn" onclick="calculate()">计算分片</button>
 
             <div id="results" class="results hidden">
-                <div class="result-section">
-                    <h3>基本信息</h3>
-                    <div class="result-item">
-                        <span class="result-label">用户ID:</span>
-                        <span class="result-value" id="displayUserId"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">HashCode:</span>
-                        <span class="result-value" id="hashCode"></span>
-                    </div>
-                </div>
-
                 <div id="mysqlResult" class="result-section hidden">
                     <h3>MySQL 分片信息</h3>
                     <div class="result-item">
@@ -450,8 +519,7 @@
                 </div>
 
                 <div class="info-box">
-                    <strong>💡 算法说明：</strong> Math.abs(userId.hashCode() % 分片数)<br>
-                    <strong>HashCode 算法：</strong> Java String.hashCode()
+                    <strong>💡 算法说明：</strong> Math.abs(userId.hashCode() % 分片数) | <strong>HashCode 算法：</strong> Java String.hashCode()
                 </div>
             </div>
         </div>
@@ -464,6 +532,18 @@
             </div>
             <div class="history-list" id="historyContainer">
                 <div class="empty-history">暂无历史记录</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自定义确认弹窗 -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">确认操作</div>
+            <div class="modal-message" id="modalMessage">确定要执行此操作吗？</div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">取消</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">确定</button>
             </div>
         </div>
     </div>
@@ -498,9 +578,7 @@
             // 计算 hashCode
             const hashCode = javaHashCode(userId);
 
-            // 显示基本信息
-            document.getElementById('displayUserId').textContent = userId;
-            document.getElementById('hashCode').textContent = hashCode;
+            // 显示结果区域
             document.getElementById('results').classList.remove('hidden');
 
             // 处理 MySQL 分片
@@ -604,14 +682,6 @@
                 let cardsHTML = '';
                 
                 sortedRecords.forEach(record => {
-                    const timestamp = new Date(record.created_at).toLocaleString('zh-CN', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    
                     let detailsHTML = '';
                     
                     // MySQL信息
@@ -652,14 +722,13 @@
                     
                     cardsHTML += `
                         <div class="history-card">
-                            <div class="history-user-id">${record.user_id}</div>
+                            <div class="history-user-id">
+                                <span class="user-id-label">用户ID</span>
+                                <span class="user-id-value">${record.user_id}</span>
+                                <button class="btn-delete-icon" onclick="confirmDelete(${record.id}, '${record.user_id.replace(/'/g, "\\'")}')">✕</button>
+                            </div>
                             <div class="history-details">
                                 ${detailsHTML}
-                            </div>
-                            <div class="timestamp">${timestamp}</div>
-                            <div class="history-actions">
-                                <button class="action-btn btn-use" onclick='useRecord(${JSON.stringify(record).replace(/'/g, "&#39;")})'>使用</button>
-                                <button class="action-btn btn-delete" onclick="deleteRecord(${record.id})">删除</button>
                             </div>
                         </div>
                     `;
@@ -671,47 +740,68 @@
             }
         }
 
-        function useRecord(record) {
-            document.getElementById('userId').value = record.user_id;
-            if (record.mysql_prefix) document.getElementById('mysqlPrefix').value = record.mysql_prefix;
-            if (record.mysql_shard_count) document.getElementById('mysqlShardCount').value = record.mysql_shard_count;
-            if (record.mongo_prefix) document.getElementById('mongoPrefix').value = record.mongo_prefix;
-            if (record.mongo_shard_count) document.getElementById('mongoShardCount').value = record.mongo_shard_count;
+        // 自定义弹窗相关函数
+        function showModal(title, message, onConfirm) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('confirmModal').classList.add('show');
             
-            // 滚动到顶部
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            
+            newConfirmBtn.onclick = () => {
+                closeModal();
+                onConfirm();
+            };
         }
 
-        async function deleteRecord(id) {
-            if (!confirm('确定要删除这条历史记录吗？')) {
-                return;
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+        }
+
+        // 点击弹窗外部关闭
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('confirmModal');
+            if (e.target === modal) {
+                closeModal();
             }
-            
-            try {
-                await fetch(`${API_BASE}/history/${id}`, {
-                    method: 'DELETE'
-                });
-                loadHistory();
-            } catch (error) {
-                console.error('删除历史记录失败:', error);
-                alert('删除失败');
-            }
+        });
+
+        function confirmDelete(id, userId) {
+            showModal(
+                '确认删除',
+                `确定要删除用户 "${userId}" 的历史记录吗？`,
+                async () => {
+                    try {
+                        await fetch(`${API_BASE}/history/${id}`, {
+                            method: 'DELETE'
+                        });
+                        loadHistory();
+                    } catch (error) {
+                        console.error('删除历史记录失败:', error);
+                        alert('删除失败');
+                    }
+                }
+            );
         }
 
         async function clearHistory() {
-            if (!confirm('确定要清空所有历史记录吗？此操作不可恢复！')) {
-                return;
-            }
-            
-            try {
-                await fetch(`${API_BASE}/history/clear`, {
-                    method: 'DELETE'
-                });
-                loadHistory();
-            } catch (error) {
-                console.error('清空历史记录失败:', error);
-                alert('清空失败');
-            }
+            showModal(
+                '确认清空',
+                '确定要清空所有历史记录吗？此操作不可恢复！',
+                async () => {
+                    try {
+                        await fetch(`${API_BASE}/history/clear`, {
+                            method: 'DELETE'
+                        });
+                        loadHistory();
+                    } catch (error) {
+                        console.error('清空历史记录失败:', error);
+                        alert('清空失败');
+                    }
+                }
+            );
         }
 
         function copyText(elementId, event) {
